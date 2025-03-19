@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file plugins/generic/datacite/classes/DOIPubIdExportPlugin.php
+ * @file plugins/generic/crossref/classes/DOIPubIdExportPlugin.php
  *
  * Copyright (c) 2014-2023 Simon Fraser University
  * Copyright (c) 2003-2023 John Willinsky
@@ -14,7 +14,7 @@
  * @brief Basis class for DOI XML metadata export plugins
  */
 
-namespace APP\plugins\generic\datacite\classes;
+namespace APP\plugins\generic\crossref\classes;
 
 use APP\facades\Repo;
 use APP\monograph\Chapter;

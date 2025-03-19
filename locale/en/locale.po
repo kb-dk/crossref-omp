@@ -11,170 +11,170 @@ msgstr ""
 "PO-Revision-Date: 2019-09-30T07:09:52-07:00\n"
 "Language: \n"
 
-msgid "plugins.importexport.datacite.description"
-msgstr "Deposite submissions in OMP's datacite XML format."
+msgid "plugins.importexport.crossref.description"
+msgstr "Deposite submissions in OMP's crossref XML format."
 
-msgid "plugins.importexport.datacite.deposited"
+msgid "plugins.importexport.crossref.deposited"
 msgstr "Deposited"
 
-msgid "plugins.importexport.datacite.depositedSubmissions"
+msgid "plugins.importexport.crossref.depositedSubmissions"
 msgstr "Deposited submissions"
 
-msgid "plugins.importexport.datacite.deposit"
+msgid "plugins.importexport.crossref.deposit"
 msgstr "Deposit"
 
-msgid "plugins.importexport.datacite.displayName"
-msgstr "Datacite XML Plugin"
+msgid "plugins.importexport.crossref.displayName"
+msgstr "Crossref XML Plugin"
 
-msgid "plugins.importexport.datacite.error"
+msgid "plugins.importexport.crossref.error"
 msgstr "Error"
 
-msgid "plugins.importexport.datacite.queued"
+msgid "plugins.importexport.crossref.queued"
 msgstr "To Deposit"
 
-msgid "plugins.importexport.datacite.redeposit"
+msgid "plugins.importexport.crossref.redeposit"
 msgstr "Deposit Again"
 
-msgid "plugins.importexport.datacite.submittedSubmissions"
+msgid "plugins.importexport.crossref.submittedSubmissions"
 msgstr "Select monographs to export"
 
-msgid "plugins.importexport.datacite.results"
+msgid "plugins.importexport.crossref.results"
 msgstr "Results"
 
-msgid "plugins.importexport.datacite.settings.description"
+msgid "plugins.importexport.crossref.settings.description"
 msgstr "Description"
 
-msgid "plugins.importexport.datacite.intro"
-msgstr "This plugin registers DOIs for monographs, chapters, publication formats and files for DOI provider <a href=\"https://datacite.org\">Datacite.org</a>."
+msgid "plugins.importexport.crossref.intro"
+msgstr "This plugin registers DOIs for monographs, chapters, publication formats and files for DOI provider <a href=\"https://crossref.org\">Crossref.org</a>."
 
-msgid "plugins.importexport.datacite.settings.label"
+msgid "plugins.importexport.crossref.settings.label"
 msgstr "Settings"
 
-msgid "plugins.importexport.datacite.settings.form.testUrl"
+msgid "plugins.importexport.crossref.settings.form.testUrl"
 msgstr "Test Url"
 
-msgid "plugins.importexport.datacite.settings.form.password"
+msgid "plugins.importexport.crossref.settings.form.password"
 msgstr "Password"
 
-msgid "plugins.importexport.datacite.settings.form.password.description"
+msgid "plugins.importexport.crossref.settings.form.password.description"
 msgstr " "
 
-msgid "plugins.importexport.datacite.settings.form.url"
-msgstr "Datacite URL"
+msgid "plugins.importexport.crossref.settings.form.url"
+msgstr "Crossref URL"
 
-msgid "plugins.importexport.datacite.settings.form.username"
+msgid "plugins.importexport.crossref.settings.form.username"
 msgstr "Username (symbol)"
 
-msgid "plugins.importexport.datacite.settings.form.usernameRequired"
-msgstr "Please enter the username (symbol) you got from DataCite. The username may not contain colons."
+msgid "plugins.importexport.crossref.settings.form.usernameRequired"
+msgstr "Please enter the username (symbol) you got from Crossref. The username may not contain colons."
 
-msgid "plugins.importexport.datacite.settings.form.automaticRegistration.description"
-msgstr "OMP will deposit DOIs automatically to DataCite. Please note that this may take a short amount of time after publication to process (e.g. depending on your cronjob configuration). You can check for all unregistered DOIs."
+msgid "plugins.importexport.crossref.settings.form.automaticRegistration.description"
+msgstr "OMP will deposit DOIs automatically to Crossref. Please note that this may take a short amount of time after publication to process (e.g. depending on your cronjob configuration). You can check for all unregistered DOIs."
 
-msgid "plugins.importexport.datacite.settings.form.testMode.description"
-msgstr "Use the DataCite test prefix for DOI registration. Please do not forget to remove this option for the production."
+msgid "plugins.importexport.crossref.settings.form.testMode.description"
+msgstr "Use the Crossref test prefix for DOI registration. Please do not forget to remove this option for the production."
 
-msgid "plugins.importexport.datacite.settings.form.testDescription"
+msgid "plugins.importexport.crossref.settings.form.testDescription"
 msgstr "Test Server settings "
 
-msgid "plugins.importexport.datacite.settings.form.testIntro"
-msgstr "You can set the datacited test server here e.g. https://labs.da-ra.de/dara/study/importXML?registration=true "
+msgid "plugins.importexport.crossref.settings.form.testIntro"
+msgstr "You can set the crossrefd test server here e.g. https://labs.da-ra.de/dara/study/importXML?registration=true "
 
-msgid "plugins.importexport.datacite.settings.form.testPrefix"
+msgid "plugins.importexport.crossref.settings.form.testPrefix"
 msgstr "Test Prefix"
 
-msgid "plugins.importexport.datacite.settings.form.testRegistry"
+msgid "plugins.importexport.crossref.settings.form.testRegistry"
 msgstr " Test registry"
 
-msgid "plugins.importexport.datacite.settings.form.testUrl"
+msgid "plugins.importexport.crossref.settings.form.testUrl"
 msgstr "Test URL"
 
-msgid "plugins.importexport.datacite.senderTask.name"
-msgstr "DataCite automatic registration task"
+msgid "plugins.importexport.crossref.senderTask.name"
+msgstr "Crossref automatic registration task"
 
-msgid "plugins.importexport.datacite.tab.monographs"
+msgid "plugins.importexport.crossref.tab.monographs"
 msgstr "Monographs / Chapters"
 
-msgid "plugins.importexport.datacite.status.registered"
+msgid "plugins.importexport.crossref.status.registered"
 msgstr "Deposited"
 
-msgid "plugins.importexport.datacite.status.markedregistered"
+msgid "plugins.importexport.crossref.status.markedregistered"
 msgstr "Marked registered"
 
-msgid "plugins.importexport.datacite.status.todeposit"
+msgid "plugins.importexport.crossref.status.todeposit"
 msgstr "Not Deposited"
 
-msgid "plugins.importexport.datacite.status.any"
+msgid "plugins.importexport.crossref.status.any"
 msgstr "Any Status"
 
-msgid "plugins.importexport.datacite.table.status"
+msgid "plugins.importexport.crossref.table.status"
 msgstr "Status"
 
-msgid "plugins.importexport.datacite.table.doi"
+msgid "plugins.importexport.crossref.table.doi"
 msgstr "DOI"
 
-msgid "plugins.importexport.datacite.table.published"
+msgid "plugins.importexport.crossref.table.published"
 msgstr "Published "
 
-msgid "plugins.importexport.datacite.table.authortitle"
+msgid "plugins.importexport.crossref.table.authortitle"
 msgstr "Author; Title "
 
-msgid "plugins.importexport.datacite.table.id"
+msgid "plugins.importexport.crossref.table.id"
 msgstr "ID"
 
-msgid "plugins.importexport.datacite.table.select"
+msgid "plugins.importexport.crossref.table.select"
 msgstr "Select"
 
-msgid "plugins.importexport.datacite.table.items"
+msgid "plugins.importexport.crossref.table.items"
 msgstr "items"
 
-msgid "plugins.importexport.datacite.table.of"
+msgid "plugins.importexport.crossref.table.of"
 msgstr "of"
 
-msgid "plugins.importexport.datacite.button.register"
+msgid "plugins.importexport.crossref.button.register"
 msgstr "Register"
 
-msgid "plugins.importexport.datacite.button.markRegistered"
+msgid "plugins.importexport.crossref.button.markRegistered"
 msgstr "Mark registered"
 
-msgid "plugins.importexport.datacite.error.mdsError"
+msgid "plugins.importexport.crossref.error.mdsError"
 msgstr "Registration was not successful! The DOI registration server returned an error: '{$param}'."
 
-msgid "plugins.importexport.datacite.search"
+msgid "plugins.importexport.crossref.search"
 msgstr "Search"
 
-msgid "plugins.importexport.datacite.search.authors"
+msgid "plugins.importexport.crossref.search.authors"
 msgstr "Authors"
 
-msgid "plugins.importexport.datacite.search.title"
+msgid "plugins.importexport.crossref.search.title"
 msgstr "Title"
 
-msgid "plugins.generic.datacite.registrationAgency.name"
-msgstr "Datacite"
+msgid "plugins.generic.crossref.registrationAgency.name"
+msgstr "Crossref"
 
-msgid "plugins.importexport.datacite.settings.form.testUsername"
+msgid "plugins.importexport.crossref.settings.form.testUsername"
 msgstr "Test Username"
 
-msgid "plugins.importexport.datacite.settings.form.testPassword"
+msgid "plugins.importexport.crossref.settings.form.testPassword"
 msgstr "Test Password"
 
-msgid "plugins.importexport.datacite.settings.form.testDOIPrefix"
+msgid "plugins.importexport.crossref.settings.form.testDOIPrefix"
 msgstr "Test DOI Prefix"
 
-msgid "plugins.importexport.datacite.settings.form.testDOIPrefixRequired"
+msgid "plugins.importexport.crossref.settings.form.testDOIPrefixRequired"
 msgstr "A test DOI prefix is required when the \"use test prefix for DOI registration\" is selected."
 
-msgid "plugins.importexport.datacite.settings.form.testUsernameRequired"
+msgid "plugins.importexport.crossref.settings.form.testUsernameRequired"
 msgstr "A test username is required when a production username is supplied."
 
-msgid "plugins.generic.datacite.displayName"
-msgstr "Datacite Manager Plugin"
+msgid "plugins.generic.crossref.displayName"
+msgstr "Crossref Manager Plugin"
 
-msgid "plugins.generic.datacite.description"
-msgstr "Handles depositing and exporting Datacite metadata"
+msgid "plugins.generic.crossref.description"
+msgstr "Handles depositing and exporting Crossref metadata"
 
-msgid "plugins.importexport.datacite.settings.form.onlyWithLandingPage.label"
+msgid "plugins.importexport.crossref.settings.form.onlyWithLandingPage.label"
 msgstr "Chapters without own page"
 
-msgid "plugins.importexport.datacite.settings.form.onlyWithLandingPage.description"
+msgid "plugins.importexport.crossref.settings.form.onlyWithLandingPage.description"
 msgstr "Deposit only chapters with own page"

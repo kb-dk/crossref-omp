@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file plugins/generic/datacite/classes/PubObjectsExportPlugin.php
+ * @file plugins/generic/crossref/classes/PubObjectsExportPlugin.php
  *
  * Copyright (c) 2014-2023 Simon Fraser University
  * Copyright (c) 2003-2023 John Willinsky
@@ -14,7 +14,7 @@
  * @brief Basis class for XML metadata export plugins
  */
 
-namespace APP\plugins\generic\datacite\classes;
+namespace APP\plugins\generic\crossref\classes;
 
 use APP\core\Application;
 use APP\facades\Repo;
@@ -296,7 +296,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
             // Get the XML
             $exportXml = $this->exportXML($objects, $filter, $context, $noValidation);
             // Write the XML to a file.
-            // export file name example: datacite-20160723-160036-articles-1.xml
+            // export file name example: crossref-20160723-160036-articles-1.xml
             $fileManager = new FileManager();
             $exportFileName = $this->getExportFileName($this->getExportPath(), $objectsFileNamePart, $context, '.xml');
             $fileManager->writeFile($exportFileName, $exportXml);
@@ -501,6 +501,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     {
         $filterDao = DAORegistry::getDAO('FilterDAO'); /** @var FilterDAO $filterDao */
         $exportFilters = $filterDao->getObjectsByGroup($filter);
+        
         assert(count($exportFilters) == 1); // Assert only a single serialization filter
         $exportFilter = array_shift($exportFilters);
         $exportDeployment = $this->_instantiateExportDeployment($context);

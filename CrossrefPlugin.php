@@ -1,26 +1,26 @@
 <?php
 
 /**
- * @file plugins/generic/datacite/DatacitePlugin.php
+ * @file plugins/generic/crossref/CrossrefPlugin.php
  *
- * Copyright (c) 2014-2021 Simon Fraser University
- * Copyright (c) 2003-2021 John Willinsky
+ * Copyright (c) 2014-2025 Simon Fraser University
+ * Copyright (c) 2003-2025 John Willinsky
  * Distributed under The MIT License. For full terms see the file LICENSE.
  *
- * @class Datacite
+ * @class Crossref
  *
- * @brief Plugin to let managers deposit DOIs and metadata to Datacite
+ * @brief Plugin to let managers deposit DOIs and metadata to Crossref
  *
  */
 
-namespace APP\plugins\generic\datacite;
+namespace APP\plugins\generic\crossref;
 
 use APP\core\Application;
 use APP\core\Services;
 use APP\facades\Repo;
 use APP\monograph\Chapter;
 use APP\monograph\ChapterDAO;
-use APP\plugins\generic\datacite\classes\DataciteSettings;
+use APP\plugins\generic\crossref\classes\CrossrefSettings;
 use APP\plugins\IDoiRegistrationAgency;
 use APP\publicationFormat\PublicationFormat;
 use APP\publicationFormat\PublicationFormatDAO;
@@ -32,22 +32,21 @@ use PKP\plugins\GenericPlugin;
 use PKP\plugins\Hook;
 use PKP\plugins\PluginRegistry;
 use PKP\services\PKPSchemaService;
-use PKP\submissionFile\SubmissionFile;
 
-class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
+class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
 {
-    private DataciteSettings $_settingsObject;
-    private ?DataciteExportPlugin $_exportPlugin = null;
+    private CrossrefSettings $_settingsObject;
+    private ?CrossrefExportPlugin $_exportPlugin = null;
 
 
     public function getDisplayName(): string
     {
-        return __('plugins.generic.datacite.displayName');
+        return __('plugins.generic.crossref.displayName');
     }
 
     public function getDescription(): string
     {
-        return __('plugins.generic.datacite.description');
+        return __('plugins.generic.crossref.description');
     }
 
     /**
@@ -84,6 +83,7 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
         parent::setEnabled($enabled);
         if (!$enabled) {
             $contextId = $this->getCurrentContextId();
+            /** @var \PKP\context\ContextDAO $contextDao */
             $contextDao = Application::getContextDAO();
             $context = $contextDao->getById($contextId);
             if ($context->getData(Context::SETTING_CONFIGURED_REGISTRATION_AGENCY) === $this->getName()) {
@@ -100,72 +100,10 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
     public function exportSubmissions(array $submissions, Context $context): array
     {
         $exportPlugin = $this->_getExportPlugin();
+        $filterName = $exportPlugin->getSubmissionFilter();
         $xmlErrors = [];
 
-        $items = [];
-
-        foreach ($submissions as $submission) {
-            //publication
-            $publication = $submission->getCurrentPublication();
-            if ($publication->getDoi()) {
-                $items[] = $publication;
-            }
-            $currentPublicationId = $publication->getId();
-
-            //chapters
-            if (in_array(Repo::doi()::TYPE_CHAPTER, $context->getEnabledDoiTypes())) {
-                $chapterDAO = new ChapterDAO();
-                $chapters = $chapterDAO->getByPublicationId($currentPublicationId)->toAssociativeArray();
-                $onlyWithLandingPage = $this->getSetting($context->getId(), DataciteSettings::KEY_ONLY_WITH_LANDINGPAGE);
-                /** @var Chapter $chapter */
-                foreach ($chapters as $chapter) {
-                    if ($chapter->getDoi()) {
-                        if ($onlyWithLandingPage) { //TODO: Remove this control structure, if omp core only assigns DOIs to chapters with own landing page.
-                            if ($chapter->isPageEnabled() === 1) {
-                                $items[] = $chapter;
-                            }
-                        } else {
-                            $items[] = $chapter;
-                        }
-
-                    }
-                }
-            }
-
-            //publication formats
-            if (in_array(Repo::doi()::TYPE_REPRESENTATION, $context->getEnabledDoiTypes())) {
-                $publicationFormatDAO = new PublicationFormatDAO();
-                $publicationFormats = $publicationFormatDAO->getByPublicationId($currentPublicationId);
-                /** @var PublicationFormat $publicationFormat */
-                foreach ($publicationFormats as $publicationFormat) {
-                    if ($publicationFormat->getDoi()) {
-                        $items[] = $publicationFormat;
-                    }
-                }
-            }
-
-            //submission files
-            if (in_array(Repo::doi()::TYPE_SUBMISSION_FILE, $context->getEnabledDoiTypes())) {
-                $submissionFiles = Repo::submissionFile()
-                    ->getCollector()
-                    ->filterBySubmissionIds([$submission->getId()])
-                    ->filterByFileStages([SubmissionFile::SUBMISSION_FILE_PROOF])
-                    ->filterByAssoc(
-                        Application::ASSOC_TYPE_PUBLICATION_FORMAT
-                    )
-                    ->getMany()
-                    ->toArray();
-
-                /** @var SubmissionFile $submissionFile */
-                foreach ($submissionFiles as $submissionFile) {
-                    if ($submissionFile->getDoi()) {
-                        $items[] = $submissionFile;
-                    }
-                }
-            }
-        }
-
-        $temporaryFileId = $exportPlugin->exportAsDownload($context, $items, null, $xmlErrors);
+        $temporaryFileId = $exportPlugin->exportAsDownload($context, $submissions, $filterName, 'books', null, $xmlErrors);
         return ['temporaryFileId' => $temporaryFileId, 'xmlErrors' => $xmlErrors];
     }
 
@@ -175,77 +113,16 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
     public function depositSubmissions(array $submissions, Context $context): array
     {
         $exportPlugin = $this->_getExportPlugin();
+        $filterName = $exportPlugin->getSubmissionFilter();
         $responseMessage = '';
+        $status = $exportPlugin->exportAndDeposit($context, $submissions, $filterName, $responseMessage);
 
-        $items = [];
-
-        foreach ($submissions as $submission) {
-            //publication
-            $publication = $submission->getCurrentPublication();
-            if ($publication->getDoi()) {
-                $items[] = $publication;
-            }
-            $currentPublicationId = $publication->getId();
-
-            //chapters
-            if (in_array(Repo::doi()::TYPE_CHAPTER, $context->getEnabledDoiTypes())) {
-                $chapterDAO = new ChapterDAO();
-                $chapters = $chapterDAO->getByPublicationId($currentPublicationId)->toAssociativeArray();
-                $onlyWithLandingPage = $this->getSetting($context->getId(), DataciteSettings::KEY_ONLY_WITH_LANDINGPAGE);
-                /** @var Chapter $chapter */
-                foreach ($chapters as $chapter) {
-                    if ($chapter->getDoi()) {
-                        if ($onlyWithLandingPage) { //TODO: Remove this control structure, if omp core only assigns DOIs to chapters with own landing page.
-                            if ($chapter->isPageEnabled() === 1) {
-                                $items[] = $chapter;
-                            }
-                        } else {
-                            $items[] = $chapter;
-                        }
-
-                    }
-                }
-            }
-
-            //publication formats
-            if (in_array(Repo::doi()::TYPE_REPRESENTATION, $context->getEnabledDoiTypes())) {
-                $publicationFormatDAO = new PublicationFormatDAO();
-                $publicationFormats = $publicationFormatDAO->getByPublicationId($currentPublicationId);
-                /** @var PublicationFormat $publicationFormat */
-                foreach ($publicationFormats as $publicationFormat) {
-                    if ($publicationFormat->getDoi()) {
-                        $items[] = $publicationFormat;
-                    }
-                }
-            }
-
-            //submission files
-            if (in_array(Repo::doi()::TYPE_SUBMISSION_FILE, $context->getEnabledDoiTypes())) {
-                $submissionFiles = Repo::submissionFile()
-                    ->getCollector()
-                    ->filterBySubmissionIds([$submission->getId()])
-                    ->filterByFileStages([SubmissionFile::SUBMISSION_FILE_PROOF])
-                    ->filterByAssoc(
-                        Application::ASSOC_TYPE_PUBLICATION_FORMAT
-                    )
-                    ->getMany()
-                    ->toArray();
-
-                /** @var SubmissionFile $submissionFile */
-                foreach ($submissionFiles as $submissionFile) {
-                    if ($submissionFile->getDoi()) {
-                        $items[] = $submissionFile;
-                    }
-                }
-            }
-        }
-
-        $status = $exportPlugin->exportAndDeposit($context, $items, $responseMessage);
         return [
             'hasErrors' => !$status,
             'responseMessage' => $responseMessage
         ];
     }
+
 
     /**
      * Includes plugin in list of configurable registration agencies for DOI depositing functionality
@@ -286,6 +163,10 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
             return false;
         }
 
+        if (!$context->getData('publisher')) {
+            return false;
+        }
+
         return true;
     }
 
@@ -295,7 +176,7 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
      */
     public function getRegistrationAgencyName(): string
     {
-        return __('plugins.generic.datacite.registrationAgency.name');
+        return __('plugins.generic.crossref.registrationAgency.name');
     }
 
     /**
@@ -304,7 +185,7 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
      */
     public function getErrorMessageKey(): ?string
     {
-        return null;
+        return $this->_getFailedMsgSettingName();
     }
 
     /**
@@ -313,17 +194,17 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
      */
     public function getRegisteredMessageKey(): ?string
     {
-        return null;
+        return $this->_getSuccessMsgSettingName();
     }
 
     /**
-     * @return DataciteExportPlugin
+     * @return CrossrefExportPlugin
      */
-    private function _getExportPlugin(): DataciteExportPlugin
+    private function _getExportPlugin(): CrossrefExportPlugin
     {
-        if (!$this->_exportPlugin instanceof DataciteExportPlugin) {
+        if (!$this->_exportPlugin instanceof CrossrefExportPlugin) {
             $pluginCategory = 'importexport';
-            $pluginPathName = 'DataciteExportPlugin';
+            $pluginPathName = 'CrossrefExportPlugin';
             $this->_exportPlugin = PluginRegistry::getPlugin($pluginCategory, $pluginPathName);
             // If being run from CLI, there is no context, so plugin initialization would not have been fired
             if ($this->_exportPlugin === null /**&& !isset($_SERVER['SERVER_NAME'])*/) {
@@ -339,7 +220,7 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
      */
     private function _pluginInitialization(): void
     {
-        PluginRegistry::register('importexport', new DataciteExportPlugin($this), $this->getPluginPath());
+        PluginRegistry::register('importexport', new CrossrefExportPlugin($this), $this->getPluginPath());
 
         Hook::add('DoiSettingsForm::setEnabledRegistrationAgencies', $this-> addAsRegistrationAgencyOption(...));
         Hook::add('DoiSetupSettingsForm::getObjectTypes', $this->addAllowedObjectTypes(...));
@@ -394,7 +275,7 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
     public function getSettingsObject(): RegistrationAgencySettings
     {
         if (!isset($this->_settingsObject)) {
-            $this->_settingsObject = new DataciteSettings($this);
+            $this->_settingsObject = new CrossrefSettings($this);
         }
 
         return $this->_settingsObject;
@@ -407,9 +288,7 @@ class DatacitePlugin extends GenericPlugin implements IDoiRegistrationAgency
     {
         return [
             Repo::doi()::TYPE_PUBLICATION, //book
-            Repo::doi()::TYPE_CHAPTER,  //chapter
-            Repo::doi()::TYPE_REPRESENTATION, //publication format
-            Repo::doi()::TYPE_SUBMISSION_FILE, //submission file
+            Repo::doi()::TYPE_CHAPTER  //chapter
         ];
     }
 }
