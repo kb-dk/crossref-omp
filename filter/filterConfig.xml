@@ -12,7 +12,7 @@
   -->
 <filterConfig>
 	<filterGroups>
-		<!-- Crossref XML article output -->
+		<!-- Crossref XML book output -->
 		<filterGroup
 			symbolic="book=>crossref-xml"
 			displayName="plugins.importexport.crossref.displayName"

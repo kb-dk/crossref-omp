@@ -34,14 +34,15 @@ use PKP\submissionFile\SubmissionFile;
 
 class CrossrefExportPlugin extends DOIPubIdExportPlugin {
 
+    // The status of the Crossref DOI.
+    // any, notDeposited, and markedRegistered are reserved
     public const CROSSREF_STATUS_FAILED = 'failed';
     public const CROSSREF_API_DEPOSIT_OK = 200;
     public const CROSSREF_API_DEPOSIT_ERROR_FROM_CROSSREF = 403;
-    public const CROSSREF_API_URL = 'https://api.crossref.org/v2/deposits';
+    public const CROSSREF_API_URL = 'https://test.crossref.org/v2/deposits';
     //TESTING
-    public const CROSSREF_API_URL_TEST = 'https://test.crossref.org/v2/deposits';
-    public const CROSSREF_API_STATUS_URL = 'https://doi.crossref.org/servlet/submissionDownload';
-
+    public const CROSSREF_API_URL_DEV = 'https://test.crossref.org/v2/deposits';
+    public const CROSSREF_API_STATUS_URL = 'https://test.crossref.org/servlet/submissionDownload';
     //TESTING
     public const CROSSREF_API_STATUS_URL_DEV = 'https://test.crossref.org/servlet/submissionDownload';
     // The name of the setting used to save the registered DOI and the URL with the deposit status.
@@ -392,7 +393,7 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
     {
         foreach ($objects as $object) {
             // Get all DOIs for each object
-            // Check if submission or issue
+            // Check if submission
             if ($object instanceof Submission) {
                 $doiIds = Repo::doi()->getDoisForSubmission($object->getId());
             }

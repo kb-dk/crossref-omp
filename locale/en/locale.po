@@ -11,161 +11,11 @@ msgstr ""
 "PO-Revision-Date: 2019-09-30T07:09:52-07:00\n"
 "Language: \n"
 
-msgid "plugins.importexport.crossref.description"
-msgstr "Deposite submissions in OMP's crossref XML format."
-
-msgid "plugins.importexport.crossref.deposited"
-msgstr "Deposited"
-
-msgid "plugins.importexport.crossref.depositedSubmissions"
-msgstr "Deposited submissions"
-
-msgid "plugins.importexport.crossref.deposit"
-msgstr "Deposit"
-
 msgid "plugins.importexport.crossref.displayName"
-msgstr "Crossref XML Plugin"
+msgstr "Crossref XML Export Plugin"
 
-msgid "plugins.importexport.crossref.error"
-msgstr "Error"
-
-msgid "plugins.importexport.crossref.queued"
-msgstr "To Deposit"
-
-msgid "plugins.importexport.crossref.redeposit"
-msgstr "Deposit Again"
-
-msgid "plugins.importexport.crossref.submittedSubmissions"
-msgstr "Select monographs to export"
-
-msgid "plugins.importexport.crossref.results"
-msgstr "Results"
-
-msgid "plugins.importexport.crossref.settings.description"
-msgstr "Description"
-
-msgid "plugins.importexport.crossref.intro"
-msgstr "This plugin registers DOIs for monographs, chapters, publication formats and files for DOI provider <a href=\"https://crossref.org\">Crossref.org</a>."
-
-msgid "plugins.importexport.crossref.settings.label"
-msgstr "Settings"
-
-msgid "plugins.importexport.crossref.settings.form.testUrl"
-msgstr "Test Url"
-
-msgid "plugins.importexport.crossref.settings.form.password"
-msgstr "Password"
-
-msgid "plugins.importexport.crossref.settings.form.password.description"
-msgstr " "
-
-msgid "plugins.importexport.crossref.settings.form.url"
-msgstr "Crossref URL"
-
-msgid "plugins.importexport.crossref.settings.form.username"
-msgstr "Username (symbol)"
-
-msgid "plugins.importexport.crossref.settings.form.usernameRequired"
-msgstr "Please enter the username (symbol) you got from Crossref. The username may not contain colons."
-
-msgid "plugins.importexport.crossref.settings.form.automaticRegistration.description"
-msgstr "OMP will deposit DOIs automatically to Crossref. Please note that this may take a short amount of time after publication to process (e.g. depending on your cronjob configuration). You can check for all unregistered DOIs."
-
-msgid "plugins.importexport.crossref.settings.form.testMode.description"
-msgstr "Use the Crossref test prefix for DOI registration. Please do not forget to remove this option for the production."
-
-msgid "plugins.importexport.crossref.settings.form.testDescription"
-msgstr "Test Server settings "
-
-msgid "plugins.importexport.crossref.settings.form.testIntro"
-msgstr "You can set the crossrefd test server here e.g. https://labs.da-ra.de/dara/study/importXML?registration=true "
-
-msgid "plugins.importexport.crossref.settings.form.testPrefix"
-msgstr "Test Prefix"
-
-msgid "plugins.importexport.crossref.settings.form.testRegistry"
-msgstr " Test registry"
-
-msgid "plugins.importexport.crossref.settings.form.testUrl"
-msgstr "Test URL"
-
-msgid "plugins.importexport.crossref.senderTask.name"
-msgstr "Crossref automatic registration task"
-
-msgid "plugins.importexport.crossref.tab.monographs"
-msgstr "Monographs / Chapters"
-
-msgid "plugins.importexport.crossref.status.registered"
-msgstr "Deposited"
-
-msgid "plugins.importexport.crossref.status.markedregistered"
-msgstr "Marked registered"
-
-msgid "plugins.importexport.crossref.status.todeposit"
-msgstr "Not Deposited"
-
-msgid "plugins.importexport.crossref.status.any"
-msgstr "Any Status"
-
-msgid "plugins.importexport.crossref.table.status"
-msgstr "Status"
-
-msgid "plugins.importexport.crossref.table.doi"
-msgstr "DOI"
-
-msgid "plugins.importexport.crossref.table.published"
-msgstr "Published "
-
-msgid "plugins.importexport.crossref.table.authortitle"
-msgstr "Author; Title "
-
-msgid "plugins.importexport.crossref.table.id"
-msgstr "ID"
-
-msgid "plugins.importexport.crossref.table.select"
-msgstr "Select"
-
-msgid "plugins.importexport.crossref.table.items"
-msgstr "items"
-
-msgid "plugins.importexport.crossref.table.of"
-msgstr "of"
-
-msgid "plugins.importexport.crossref.button.register"
-msgstr "Register"
-
-msgid "plugins.importexport.crossref.button.markRegistered"
-msgstr "Mark registered"
-
-msgid "plugins.importexport.crossref.error.mdsError"
-msgstr "Registration was not successful! The DOI registration server returned an error: '{$param}'."
-
-msgid "plugins.importexport.crossref.search"
-msgstr "Search"
-
-msgid "plugins.importexport.crossref.search.authors"
-msgstr "Authors"
-
-msgid "plugins.importexport.crossref.search.title"
-msgstr "Title"
-
-msgid "plugins.generic.crossref.registrationAgency.name"
-msgstr "Crossref"
-
-msgid "plugins.importexport.crossref.settings.form.testUsername"
-msgstr "Test Username"
-
-msgid "plugins.importexport.crossref.settings.form.testPassword"
-msgstr "Test Password"
-
-msgid "plugins.importexport.crossref.settings.form.testDOIPrefix"
-msgstr "Test DOI Prefix"
-
-msgid "plugins.importexport.crossref.settings.form.testDOIPrefixRequired"
-msgstr "A test DOI prefix is required when the \"use test prefix for DOI registration\" is selected."
-
-msgid "plugins.importexport.crossref.settings.form.testUsernameRequired"
-msgstr "A test username is required when a production username is supplied."
+msgid "plugins.importexport.crossref.description"
+msgstr "Export book metadata in Crossref XML format."
 
 msgid "plugins.generic.crossref.displayName"
 msgstr "Crossref Manager Plugin"
@@ -173,8 +23,140 @@ msgstr "Crossref Manager Plugin"
 msgid "plugins.generic.crossref.description"
 msgstr "Handles depositing and exporting Crossref metadata"
 
-msgid "plugins.importexport.crossref.settings.form.onlyWithLandingPage.label"
-msgstr "Chapters without own page"
+msgid "plugins.importexport.crossref.requirements"
+msgstr "Requirements"
 
-msgid "plugins.importexport.crossref.settings.form.onlyWithLandingPage.description"
-msgstr "Deposit only chapters with own page"
+msgid "plugins.importexport.crossref.requirements.satisfied"
+msgstr "All plugin requirements are satisfied."
+
+msgid "plugins.importexport.crossref.error.publisherNotConfigured"
+msgstr "A publisher has not been configured! You must add a publisher institution on the <a href=\"{$pressSettingsUrl}\" target=\"_blank\">Press Settings Page</a>."
+
+msgid "plugins.importexport.crossref.error.noDOIContentObjects"
+msgstr "Books are not selected for DOI assignment in the DOI public identifier plugin, so there is no deposit or export possibility in this plugin."
+
+msgid "plugins.importexport.crossref.settings"
+msgstr "Crossref Settings"
+
+msgid "plugins.importexport.crossref.settings.depositorIntro"
+msgstr "The following items are required for a successful Crossref deposit."
+
+msgid "plugins.importexport.crossref.settings.form.depositorName"
+msgstr "Depositor name"
+
+msgid "plugins.importexport.crossref.settings.form.depositorName.description"
+msgstr "Name of the organization registering the DOIs. It is included with deposited metadata and used to record who submitted the deposit."
+
+msgid "plugins.importexport.crossref.settings.form.depositorEmail"
+msgstr "Depositor email"
+
+msgid "plugins.importexport.crossref.settings.form.depositorEmail.description"
+msgstr "Email address of the individual responsible for registering content with Crossref. It is included with the deposited metadata and used when sending the deposit confirmation email."
+
+msgid "plugins.importexport.crossref.settings.form.depositorNameRequired"
+msgstr "Please enter the depositor name."
+
+msgid "plugins.importexport.crossref.settings.form.depositorEmailRequired"
+msgstr "Please enter the depositor email."
+
+msgid "plugins.importexport.crossref.registrationIntro"
+msgstr ""
+"<p>If you would like to use this plugin to register Digital Object Identifiers (DOIs) directly with <a href=\"http://www.crossref.org/\">Crossref</a>, you will need to add your <a href=\"https://www.crossref.org/documentation/member-setup/account-credentials/\">Crossref account credentials</a> into the username and password fields below.</p>"
+"<p>Depending on your Crossref membership, there are two ways to enter your username and password:</p>"
+"<ul>"
+"<li>If you are using an organizational account, add your <a href=\"https://www.crossref.org/documentation/member-setup/account-credentials/#00376\">shared username and password</a></li>"
+"<li>If you are using a <a href=\"https://www.crossref.org/documentation/member-setup/account-credentials/#00368\">personal account</a>, enter your email address and the role in the username field. The username will look like: email@example.com/role</li>"
+"<li>If you do not know or have access to your Crossref credentials, you can contact <a href=\"https://support.crossref.org/\">Crossref support</a> for assistance. Without credentials, you may still export metadata into the Crossref XML format, but you cannot register your DOIs with Crossref from OJS.</li>"
+"</ul>"
+
+msgid "plugins.importexport.crossref.settings.form.username"
+msgstr "Username"
+
+msgid "plugins.importexport.crossref.settings.form.username.description"
+msgstr "The Crossref username that will be used to authenticate your deposits. If you are using a personal account, please see the advice above."
+
+msgid "plugins.importexport.crossref.settings.form.usernameRequired"
+msgstr "Please enter the username you got from Crossref."
+
+msgid "plugins.importexport.crossref.settings.form.automaticRegistration.description"
+msgstr "OJS will deposit assigned DOIs automatically to Crossref. Please note that this may take a short amount of time after publication to process  (e.g. depending on your cronjob configuration). You can check for all unregistered DOIs."
+
+#, fuzzy
+msgid "plugins.importexport.crossref.settings.form.testMode.description"
+msgstr "Use the Crossref test API (testing environment) for the DOI deposit. Please do not forget to remove this option in production."
+
+msgid "plugins.importexport.crossref.settings.form.validation"
+msgstr "Validate XML. Use this option for the XML download for the manual DOI registration."
+
+msgid "plugins.importexport.crossref.settings.form.onlyValidateExport"
+msgstr "Only validate export. Don't download the file."
+
+msgid "plugins.importexport.crossref.status.failed"
+msgstr "Failed"
+
+msgid "plugins.importexport.crossref.status.registered"
+msgstr "Active"
+
+msgid "plugins.importexport.crossref.status.markedRegistered"
+msgstr "Marked active"
+
+msgid "plugins.importexport.crossref.status.notDeposited"
+msgstr "Not deposited"
+
+msgid "plugins.importexport.crossref.action.register"
+msgstr "Deposit"
+
+msgid "plugins.importexport.crossref.statusLegend"
+msgstr ""
+"\n"
+"\t\t<p>Deposit status:</p>\n"
+"\t\t<p>\n"
+"\t\t- Not deposited: no deposit attempt has been made for this DOI.<br />\n"
+"\t\t- Active: the DOI has been deposited, and is resolving correctly.<br />\n"
+"\t\t- Failed: the DOI deposit has failed.<br />\n"
+"\t\t- Marked active: the DOI was manually marked as active.\n"
+"\t\t</p>\n"
+"\t\t<p>Only the status of the last deposit attempt is displayed.</p>\n"
+"\t\t<p>If a deposit has failed, please solve the problem and try to register the DOI again.</p>"
+
+msgid "plugins.importexport.crossref.action.export"
+msgstr "Export"
+
+msgid "plugins.importexport.crossref.action.markRegistered"
+msgstr "Mark active"
+
+msgid "plugins.importexport.crossref.senderTask.name"
+msgstr "Crossref automatic registration task"
+
+msgid "plugins.importexport.crossref.cliUsage"
+msgstr ""
+"Usage:\n"
+"{$scriptName} {$pluginName} export [xmlFileName] [press_path] books objectId1 [objectId2] ...\n"
+"{$scriptName} {$pluginName} register [press_path] books objectId1 [objectId2] ...\n"
+""
+
+msgid "plugins.importexport.crossref.register.error.mdsError"
+msgstr "Registration was not fully successful! The DOI registration server returned an error."
+
+msgid "plugins.importexport.crossref.register.success.warning"
+msgstr "Registration was successful but the following warning occurred: '{$param}'."
+
+msgid "plugins.importexport.crossref.export.error.bookNotFound"
+msgstr "No book matched the specified ID \"{$bookId}\"."
+
+msgid "plugins.generic.crossref.registrationAgency.name"
+msgstr "Crossref"
+
+msgid "plugins.generic.crossref.successMessage"
+msgstr ""
+"The metadata for this item has been deposited with Crossref. "
+"To view further details, see the submission in the <a href=\"https://doi.crossref.org/servlet/submissionAdmin?sf=detail&submissionID={$submissionId}\">Crossref admin panel</a>."
+
+msgid "plugins.importexport.crossref.settings.form.password"
+msgstr "Password"
+
+msgid "plugins.importexport.crossref.settings.form.password.description"
+msgstr "Please note that the password will be saved as plain text, i.e. not encrypted."
+
+msgid "plugins.importexport.crossref.missingRequirements"
+msgstr "Plugin requirements not met"

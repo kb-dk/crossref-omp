@@ -296,7 +296,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
             // Get the XML
             $exportXml = $this->exportXML($objects, $filter, $context, $noValidation);
             // Write the XML to a file.
-            // export file name example: crossref-20160723-160036-articles-1.xml
+            // export file name example: crossref-20160723-160036-books-1.xml
             $fileManager = new FileManager();
             $exportFileName = $this->getExportFileName($this->getExportPath(), $objectsFileNamePart, $context, '.xml');
             $fileManager->writeFile($exportFileName, $exportXml);
@@ -489,7 +489,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     /**
      * Get the XML for selected objects.
      *
-     * @param mixed $objects Array of or single published submission, issue or galley
+     * @param mixed $objects Array of or single published submission
      * @param string $filter
      * @param Context $context
      * @param bool $noValidation If set to true no XML validation will be done

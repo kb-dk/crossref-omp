@@ -86,8 +86,8 @@
                  'inputType' => 'text',
              ]),
              new FieldText('password', [
-                 'label' => __('plugins.importexport.common.settings.form.password'),
-                 'description' => __('plugins.importexport.common.settings.form.password.description'),
+                 'label' => __('plugins.importexport.crossref.settings.form.password'),
+                 'description' => __('plugins.importexport.crossref.settings.form.password.description'),
                  'value' => $this->agencyPlugin->getSetting($context->getId(), 'password'),
                  'inputType' => 'password',
              ]),
@@ -105,7 +105,7 @@
      {
          $text = '';
  
-         $journalSettingsUrl = Application::get()->getDispatcher()->url(
+         $pressSettingsUrl = Application::get()->getDispatcher()->url(
              Application::get()->getRequest(),
              PKPApplication::ROUTE_PAGE,
              $context->getPath(),
@@ -116,13 +116,13 @@
  
          $notices = [];
          if (!$context->getData('publisher')) {
-             $notices[] = __('plugins.importexport.crossref.error.publisherNotConfigured', ['journalSettingsUrl' => $journalSettingsUrl]);
+             $notices[] = __('plugins.importexport.crossref.error.publisherNotConfigured', ['pressSettingsUrl' => $pressSettingsUrl]);
          }
 
  
          if (!empty($notices)) {
              $text .= '<div class="pkpNotification pkpNotification--warning">';
-             $text .= '<p><strong>' . __('plugins.importexport.common.missingRequirements') . '</strong></p><ul>';
+             $text .= '<p><strong>' . __('plugins.importexport.crossref.missingRequirements') . '</strong></p><ul>';
  
              foreach ($notices as $notice) {
                  $text .= '<li>' . $notice . '</li>';
