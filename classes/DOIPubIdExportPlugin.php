@@ -70,13 +70,14 @@ abstract class DOIPubIdExportPlugin extends PubObjectsExportPlugin
         return 'DOI';
     }
 
+
     /**
      * Mark selected publication as registered.
      *
-     * @param Context $context
-     * @param array $objects Array of published publications, chapters or publication formats
+     * @param Journal $context
+     * @param array $objects Array of published submissions or chapters
      */
-    public function markRegistered(Context $context, array $objects): void
+    public function markRegistered($context, $objects)
     {
         foreach ($objects as $object) {
             $doiId = $object->getData('doiId');

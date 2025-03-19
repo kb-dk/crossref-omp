@@ -117,7 +117,7 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
     /**
      * @copydoc PubObjectsExportPlugin::getStatusMessage()
      */
-    public function getStatusMessage($request)
+    public function getStatusMessage($request): ?string
     {
         // Application is set to sandbox mode and will not run the features of plugin
         if (Config::getVar('general', 'sandbox', false)) {
@@ -157,7 +157,7 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
      *
      * @return array
      */
-    protected function _getObjectAdditionalSettings()
+    protected function _getObjectAdditionalSettings(): array
     {
         return array_merge(parent::_getObjectAdditionalSettings(), [
             $this->getDepositBatchIdSettingName(),
@@ -433,7 +433,7 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
     /**
      * @copydoc PubObjectsExportPlugin::getDepositSuccessNotificationMessageKey()
      */
-    public function getDepositSuccessNotificationMessageKey()
+    public function getDepositSuccessNotificationMessageKey(): string
     {
         return 'plugins.importexport.common.register.success';
     }

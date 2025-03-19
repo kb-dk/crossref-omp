@@ -359,7 +359,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
      *
      * @return bool|array Whether the XML document has been registered
      */
-    abstract public function depositXML(array|DataObject $objects, Context $context, string $filename): bool|array;
+    abstract public function depositXML(array|DataObject $objects, Context $context, string $filename);
 
     /**
      * Get detailed message of the object status i.e. failure messages.
@@ -526,12 +526,12 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     }
 
     /**
-     * Mark selected submissions or issues as registered.
+     * Mark selected submissions or chapters as registered.
      *
      * @param Context $context
-     * @param array $objects Array of published publications, chapters or publication formats
+     * @param array $objects Array of published publications or chapters
      */
-    public function markRegistered(Context $context, array $objects): void
+    public function markRegistered(Context $context, array $objects)
     {
         foreach ($objects as $object) {
             $object->setData($this->getDepositStatusSettingName(), self::EXPORT_STATUS_MARKEDREGISTERED);

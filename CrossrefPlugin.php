@@ -198,6 +198,31 @@ class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
     }
 
     /**
+     * Get request failed message setting name.
+     * NB: Change from 3.3.x to camelCase (over crossref::failedMsg)
+     *
+     */
+    private function _getFailedMsgSettingName(): string
+    {
+        return $this->getName() . '_failedMsg';
+    }
+
+    /**
+     * Get deposit batch ID setting name.
+     * NB: Change from 3.3.x to camelCase (over crossref::batchId)
+     *
+     */
+    private function _getDepositBatchIdSettingName(): string
+    {
+        return $this->getName() . '_batchId';
+    }
+
+    private function _getSuccessMsgSettingName(): string
+    {
+        return $this->getName() . '_successMsg';
+    }
+
+    /**
      * @return CrossrefExportPlugin
      */
     private function _getExportPlugin(): CrossrefExportPlugin

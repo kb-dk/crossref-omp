@@ -76,10 +76,6 @@ class CrossrefXmlFilter extends NativeExportFilter
         $bodyNode = $doc->createElementNS($deployment->getNamespace(), 'body');
         $rootNode->appendChild($bodyNode);
 
-        if (!$context || !$context->getData('publisher')) {
-            throw new Exception('No Publisher institution available.');
-        }
-
         foreach ($pubObjects as $pubObject) {
             if (!$pubObject instanceof Submission) {
                 throw new Exception('Expected instance of Submission.');
