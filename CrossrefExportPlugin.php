@@ -48,9 +48,6 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
     // The name of the setting used to save the registered DOI and the URL with the deposit status.
     public const CROSSREF_DEPOSIT_STATUS = 'depositStatus';
 
-    //additional field names
-	public const DEPOSIT_STATUS_FIELD_NAME = 'crossref-export::status';
-
 	//private const EXPORT_STATUS_ANY = '';
 	public const EXPORT_STATUS_NOT_DEPOSITED    = 'notDeposited';
 	public const EXPORT_STATUS_MARKEDREGISTERED = 'markedRegistered';
@@ -124,6 +121,15 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
         if (Config::getVar('general', 'sandbox', false)) {
             error_log('Application is set to sandbox mode and will not have any interaction with crossref external service');
             return __('common.sandbox');
+        }
+
+        // if the failure occurred on request and the message was saved
+        // return that message
+        $submissionId = $request->getUserVar('submissionId');
+        $submission = Repo::submission()->get((int)$submissionId);
+        $failedMsg = $submission->getData('doiObject')->getData($this->getFailedMsgSettingName());
+        if (!empty($failedMsg)) {
+            return $failedMsg;
         }
 
         $context = $request->getContext();
@@ -229,14 +235,10 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
     public function exportAsDownload(\PKP\context\Context $context, array $objects, string $filter, string $objectsFileNamePart, ?bool $noValidation = null, ?array &$exportErrors = null): ?int
     {
         $fileManager = new TemporaryFileManager();
-
         $exportErrors = [];
         $exportXml = $this->exportXML($objects, $filter, $context, $noValidation, $exportErrors);
-
         $exportFileName = $this->getExportFileName($this->getExportPath(), $objectsFileNamePart, $context, '.xml');
-
         $fileManager->writeFile($exportFileName, $exportXml);
-
         $user = Application::get()->getRequest()->getUser();
 
         return $fileManager->createTempFileFromExisting($exportFileName, $user->getId());

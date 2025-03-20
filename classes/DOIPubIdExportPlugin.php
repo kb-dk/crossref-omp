@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/crossref/classes/DOIPubIdExportPlugin.php
  *
- * Copyright (c) 2014-2023 Simon Fraser University
- * Copyright (c) 2003-2023 John Willinsky
+ * Copyright (c) 2014-2025 Simon Fraser University
+ * Copyright (c) 2003-2025 John Willinsky
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class DOIPubIdExportPlugin
@@ -18,13 +18,10 @@ namespace APP\plugins\generic\crossref\classes;
 
 use APP\facades\Repo;
 use APP\monograph\Chapter;
-use APP\publication\Publication;
-use APP\publicationFormat\PublicationFormat;
+use APP\submission\Submission;
 use APP\template\TemplateManager;
 use PKP\context\Context;
 use PKP\core\PKPString;
-use PKP\submissionFile\SubmissionFile;
-
 
 abstract class DOIPubIdExportPlugin extends PubObjectsExportPlugin
 {
@@ -97,15 +94,15 @@ abstract class DOIPubIdExportPlugin extends PubObjectsExportPlugin
      * are active at the same time.
      *
      * @param Context $context
-     * @param Publication|Chapter|PublicationFormat $object
+     * @param Submission|Chapter $object
      * @param string $testPrefix
      */
-    public function saveRegisteredDoi(Context $context, Publication|Chapter|PublicationFormat $object, string $testPrefix = '10.1234'): void
+    public function saveRegisteredDoi($context, $object, $testPrefix = '10.1234')
     {
         $registeredDoi = $object->getStoredPubId('doi');
         assert(!empty($registeredDoi));
         if ($this->isTestMode($context)) {
-            $registeredDoi = $this->createTestDOI($registeredDoi, $testPrefix);
+            $registeredDoi = PKPString::regexp_replace('#^[^/]+/#', $testPrefix . '/', $registeredDoi);
         }
         $object->setData($this->getPluginSettingsPrefix() . '::' . self::DOI_EXPORT_REGISTERED_DOI, $registeredDoi);
         $this->updateObject($object);
@@ -119,30 +116,33 @@ abstract class DOIPubIdExportPlugin extends PubObjectsExportPlugin
     protected function _getObjectAdditionalSettings(): array
     {
         return array_merge(parent::_getObjectAdditionalSettings(), [
-            $this->getPluginSettingsPrefix() . '::' . self::DOI_EXPORT_REGISTERED_DOI,
+            $this->getPluginSettingsPrefix() . '::' . self::DOI_EXPORT_REGISTERED_DOI
         ]);
     }
 
     /**
-     * Get published publications with a DOI assigned from publication IDs.
+     * Get published submissions with a DOI assigned from submission IDs.
      *
-     * @param array $publicationIds
+     * @param array $submissionIds
      * @param Context $context
      *
      * @return array
      */
-    public function getPublishedPublications(array $publicationIds, Context $context): array
+    public function getPublishedSubmissions($submissionIds, $context)
     {
-        $validPublishedPublications = parent::getPublishedPublications($publicationIds, $context);
-        $validPublishedPublicationsWithDoi = [];
-        /** @var Publication $publication */
-        foreach ($validPublishedPublications as $publication) {
-            if ($publication->getDoi() !== null) {
-                $validPublishedPublicationsWithDoi[] = $publication;
-            }
-        }
-
-        return $validPublishedPublicationsWithDoi;
+        $allSubmissionIds = Repo::submission()
+            ->getCollector()
+            ->filterByContextIds([$context->getId()])
+            ->filterByStatus([PKPSubmission::STATUS_PUBLISHED])
+            ->getIds()
+            ->toArray();
+        $validSubmissionIds = array_intersect($allSubmissionIds, $submissionIds);
+        $submissions = array_map(function ($submissionId) {
+            return Repo::submission()->get($submissionId);
+        }, $validSubmissionIds);
+        return array_filter($submissions, function ($submission) {
+            return $submission->getCurrentPublication()->getDoi() !== null;
+        });
     }
 
     /**
@@ -168,51 +168,6 @@ abstract class DOIPubIdExportPlugin extends PubObjectsExportPlugin
     }
 
     /**
-     * Get publication formats from publication format IDs.
-     *
-     * @param array $publicationFormatIds
-     * @param Context $context
-     *
-     * @return array
-     */
-    public function getPublishedPublicationFormats(array $publicationFormatIds, Context $context): array
-    {
-        $validPublishedPublicationFormats = parent::getPublishedPublicationFormats($publicationFormatIds, $context);
-        $validPublishedPublicationFormatsWithDoi = [];
-        /** @var PublicationFormat $publicationFormat */
-        foreach ($validPublishedPublicationFormats as $publicationFormat) {
-            if ($publicationFormat->getDoi() !== null) {
-                $validPublishedPublicationFormatsWithDoi[] = $publicationFormat;
-            }
-        }
-
-        return $validPublishedPublicationFormatsWithDoi;
-    }
-
-    /**
-     * Get publication formats from publication format IDs.
-     *
-     * @param array $submissionFileIds
-     * @param Context $context
-     *
-     * @return array
-     */
-    public function getPublishedSubmissionFiles(array $submissionFileIds, Context $context): array
-    {
-        $validPublishedSubmissionFiles = parent::getPublishedSubmissionFiles($submissionFileIds, $context);
-        $validPublishedSubmissionFilesWithDoi = [];
-        /** @var SubmissionFile $submissionFile */
-        foreach ($validPublishedSubmissionFiles as $submissionFile) {
-            if ($submissionFile->getDoi() !== null) {
-                $validPublishedSubmissionFilesWithDoi[] = $submissionFile;
-            }
-        }
-
-        return $validPublishedSubmissionFilesWithDoi;
-    }
-
-
-    /**
      * @copydoc ImportExportPlugin::executeCLI()
      */
     public function executeCLI($scriptName, &$args): void
@@ -227,8 +182,4 @@ abstract class DOIPubIdExportPlugin extends PubObjectsExportPlugin
         return false;
     }
 
-    public function createTestDOI(string $doi, string $testPrefix) : array|string|null
-    {
-        return PKPString::regexp_replace('#^[^/]+/#', $testPrefix . '/', $doi);
-    }
 }

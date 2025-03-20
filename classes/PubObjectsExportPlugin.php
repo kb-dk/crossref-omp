@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/crossref/classes/PubObjectsExportPlugin.php
  *
- * Copyright (c) 2014-2023 Simon Fraser University
- * Copyright (c) 2003-2023 John Willinsky
+ * Copyright (c) 2014-2025 Simon Fraser University
+ * Copyright (c) 2003-2025 John Willinsky
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class PubObjectsExportPlugin
@@ -21,7 +21,7 @@ use APP\facades\Repo;
 use APP\monograph\ChapterDAO;
 use APP\notification\NotificationManager;
 use APP\publication\Publication;
-use APP\publicationFormat\PublicationFormatDAO;
+use APP\submission\Submission;
 use APP\template\TemplateManager;
 use PKP\context\Context;
 use PKP\context\ContextDAO;
@@ -45,19 +45,18 @@ use PKP\user\User;
 
 abstract class PubObjectsExportPlugin extends ImportExportPlugin
 {
-    // The statuses.
+
+    // The statuses
     public const EXPORT_STATUS_ANY = '';
     public const EXPORT_STATUS_NOT_DEPOSITED = 'notDeposited';
     public const EXPORT_STATUS_MARKEDREGISTERED = 'markedRegistered';
     public const EXPORT_STATUS_REGISTERED = 'registered';
-
-    // The actions.
+    // The actions
     public const EXPORT_ACTION_EXPORT = 'export';
     public const EXPORT_ACTION_MARKREGISTERED = 'markRegistered';
     public const EXPORT_ACTION_DEPOSIT = 'deposit';
-
     // Configuration errors.
-    public const EXPORT_CONFIG_ERROR_SETTINGS = 0x02;
+    public const EXPORT_CONFIG_ERROR_SETTINGS = 2;
 
     /** @var ?PubObjectCache */
     public ?PubObjectCache $_cache = null;
@@ -75,6 +74,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         }
         return $this->_cache;
     }
+
 
     /**
      * @copydoc Plugin::register()
@@ -182,10 +182,8 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
                     'configurationErrors' => $configurationErrors,
                 ]);
                 break;
-            case 'exportPublications':
+            case 'exportSubmissions':
             case 'exportChapters':
-            case 'exportRepresentations':
-            case 'exportSubmissionFiles':
                 $this->prepareAndExportPubObjects($request, $context);
         }
     }
@@ -199,46 +197,36 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
      */
     public function prepareAndExportPubObjects(PKPRequest $request, Context $context, array $args = []): void
     {
-        $selectedPublications = (array) $request->getUserVar('selectedPublications');
+        $selectedSubmissions = (array) $request->getUserVar('selectedSubmissions');
         $selectedChapters = (array) $request->getUserVar('selectedChapters');
-        $selectedRepresentations = (array) $request->getUserVar('selectedRepresentations');
-        $selectedSubmissionFiles = (array) $request->getUserVar('selectedSubmissionFiles');
         $tab = (string) $request->getUserVar('tab');
-        $noValidation = !$request->getUserVar('validation');
+        $noValidation = $request->getUserVar('validation') ? false : true;
         $objects = [];
         $filter = '';
         $objectsFileNamePart = '';
 
-        if (!empty($args['publicationIds'])) {
-            $selectedPublications = (array) $args['publicationIds'];
+        if (!empty($args['submissionIds'])) {
+            $selectedSubmissions = (array) $args['submissionIds'];
         }
         if (!empty($args['chapterIds'])) {
             $selectedChapters = (array) $args['chapterIds'];
         }
-        if (empty($selectedPublications) && empty($selectedChapters) && empty($selectedRepresentations) && empty($selectedSubmissionFiles)) {
+        if (empty($selectedSubmissions) && empty($selectedChapters)) {
             fatalError(__('plugins.importexport.common.error.noObjectsSelected'));
         }
-        if (!empty($selectedPublications)) {
-            $objects = $this->getPublishedPublications($selectedPublications, $context);
-            $filter = $this->getPublicationFilter();
+        if (!empty($selectedSubmissions)) {
+            $objects = $this->getPublishedSubmissions($selectedSubmissions, $context);
+            $filter = $this->getSubmissionFilter();
             $objectsFileNamePart = 'books';
         } elseif (!empty($selectedChapters)) {
             $objects = $this->getPublishedChapters($selectedChapters, $context);
             $filter = $this->getChapterFilter();
             $objectsFileNamePart = 'chapters';
-        } elseif (!empty($selectedRepresentations)) {
-            $objects = $this->getPublishedPublicationFormats($selectedRepresentations, $context);
-            $filter = $this->getRepresentationFilter();
-            $objectsFileNamePart = 'publicationFormats';
-        } elseif (!empty($selectedSubmissionFiles)) {
-            $objects = $this->getPublishedSubmissionFiles($selectedSubmissionFiles, $context);
-            $filter = $this->getSubmissionFileFilter();
-            $objectsFileNamePart = 'submissionFiles';
         }
 
         // Execute export action
         $this->executeExportAction($request, $objects, $filter, $tab, $objectsFileNamePart, $noValidation);
-    }
+    }  
 
     /**
      * Execute export action.
@@ -258,7 +246,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         if ($this->_checkForExportAction(self::EXPORT_ACTION_EXPORT)) {
             assert($filter != null);
 
-            $onlyValidateExport = $request->getUserVar('onlyValidateExport');
+            $onlyValidateExport = ($request->getUserVar('onlyValidateExport')) ? true : false;
             if ($onlyValidateExport) {
                 $noValidation = false;
             }
@@ -267,7 +255,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
             $exportXml = $this->exportXML($objects, $filter, $context, $noValidation);
 
             if ($onlyValidateExport) {
-                if ($exportXml !== true) {
+                if (isset($exportXml)) {
                     $this->_sendNotification(
                         $request->getUser(),
                         'plugins.importexport.common.validation.success',
@@ -375,11 +363,11 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     }
 
     /**
-     * Get the publication filter.
+     * Get the submission filter.
      *
      * @return string|null
      */
-    public function getPublicationFilter(): ?string
+    public function getSubmissionFilter()
     {
         return null;
     }
@@ -390,26 +378,6 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
      * @return string|null
      */
     public function getChapterFilter(): ?string
-    {
-        return null;
-    }
-
-    /**
-     * Get the representation filter.
-     *
-     * @return string|null
-     */
-    public function getRepresentationFilter(): ?string
-    {
-        return null;
-    }
-
-    /**
-     * Get the submission file filter.
-     *
-     * @return string|null
-     */
-    public function getSubmissionFileFilter(): ?string
     {
         return null;
     }
@@ -467,7 +435,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     {
         return [
             self::EXPORT_ACTION_DEPOSIT => __('plugins.importexport.common.action.register'),
-            self::EXPORT_ACTION_EXPORT => __('plugins.importexport.common.action.export'),
+            self::EXPORT_ACTION_EXPORT => __('plugins.importexport.crossref.action.export'),
             self::EXPORT_ACTION_MARKREGISTERED => __('plugins.importexport.common.action.markRegistered'),
         ];
     }
@@ -529,7 +497,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
      * Mark selected submissions or chapters as registered.
      *
      * @param Context $context
-     * @param array $objects Array of published publications or chapters
+     * @param array $objects Array of published submissions or chapters
      */
     public function markRegistered(Context $context, array $objects)
     {
@@ -542,9 +510,9 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     /**
      * Update the given object.
      *
-     * @param DataObject $object
+     * @param Submission|Chapter $object
      */
-    protected function updateObject(DataObject $object): void
+    protected function updateObject($object)
     {
         // Register a hook for the required additional
         // object fields. We do this on a temporary
@@ -629,31 +597,28 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     }
 
     /**
-     * Retrieve all unregistered Publications.
+     * Retrieve all unregistered Submissions.
      *
      * @param Context $context
      *
      * @return array
      */
-    public function getUnregisteredPublications(Context $context): array
+    public function getUnregisteredSubmissions($context)
     {
-        // Retrieve all published publications that have not yet been registered.
-        $publications = Repo::publication()
-            ->getCollector()
-            ->filterByContextIds([$context->getId()])
-            ->getMany()
-            ->toArray();
-
-        $unregisteredPublications = [];
-        /** @var Publication $publication */
-        foreach ($publications as $publication) {
-            if ($publication->getData($this->getDepositStatusSettingName()) === self::EXPORT_STATUS_NOT_DEPOSITED) {
-                $unregisteredPublications[] = $publication;
-            }
-        }
-
-        return $unregisteredPublications;
+        // Retrieve all published submissions that have not yet been registered.
+        $submissions = Repo::submission()->dao->getExportable(
+            $context->getId(),
+            null,
+            null,
+            null,
+            null,
+            $this->getDepositStatusSettingName(),
+            self::EXPORT_STATUS_NOT_DEPOSITED,
+            null
+        );
+        return $submissions->toArray();
     }
+
     /**
      * Check whether we are in test mode.
      *
@@ -681,13 +646,13 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     /**
      * @copydoc PKPImportExportPlugin::usage
      */
-    public function usage($scriptName): void
+    public function usage($scriptName)
     {
         echo __(
             'plugins.importexport.' . $this->getPluginSettingsPrefix() . '.cliUsage',
             [
                 'scriptName' => $scriptName,
-                'pluginName' => $this->getName(),
+                'pluginName' => $this->getName()
             ]
         ) . "\n";
     }
@@ -734,25 +699,15 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         }
 
         switch ($objectType) {
-            case 'publications':
-                $objects = $this->getPublishedPublications($args, $context);
-                $filter = $this->getPublicationFilter();
-                $objectsFileNamePart = 'publications';
+            case 'books':
+                $objects = $this->getPublishedSubmissions($args, $context);
+                $filter = $this->getSubmissionFilter();
+                $objectsFileNamePart = 'books';
                 break;
             case 'chapters':
                 $objects = $this->getPublishedChapters($args, $context);
                 $filter = $this->getChapterFilter();
                 $objectsFileNamePart = 'chapters';
-                break;
-            case 'publicationFormats':
-                $objects = $this->getPublishedPublicationFormats($args, $context);
-                $filter = $this->getRepresentationFilter();
-                $objectsFileNamePart = 'publicationFormats';
-                break;
-            case 'submissionFiles':
-                $objects = $this->getPublishedSubmissionFiles($args, $context);
-                $filter = $this->getSubmissionFileFilter();
-                $objectsFileNamePart = 'submissionFiles';
                 break;
             default:
                 $this->usage($scriptName);
@@ -770,6 +725,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         }
 
         $this->executeCLICommand($scriptName, $command, $context, $outputFile, $objects, $filter, $objectsFileNamePart);
+        return;
     }
 
     /**
@@ -816,29 +772,25 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     }
 
     /**
-     * Get published publications from publication IDs.
+     * Get published submissions from submission IDs.
      *
-     * @param array   $publicationIds
+     * @param array $submissionIds
      * @param Context $context
      *
      * @return array
      */
-    public function getPublishedPublications(array $publicationIds, Context $context): array
+    public function getPublishedSubmissions($submissionIds, $context)
     {
-        $allPublicationIds = Repo::publication()
+        $allSubmissionIds = Repo::submission()
             ->getCollector()
             ->filterByContextIds([$context->getId()])
+            ->filterByStatus([PKPSubmission::STATUS_PUBLISHED])
             ->getIds()
             ->toArray();
-        $validPublicationIds = array_intersect($allPublicationIds, $publicationIds);
-        $validPublishedPublications = [];
-        foreach ($validPublicationIds as $publicationId) {
-            $publication = Repo::publication()->get($publicationId);
-            if ($publication->getData('status') === PKPSubmission::STATUS_PUBLISHED) {
-                $validPublishedPublications[$publicationId] = $publication;
-            }
-        }
-        return $validPublishedPublications;
+        $validSubmissionIds = array_intersect($allSubmissionIds, $submissionIds);
+        return array_map(function ($submissionId) {
+            return Repo::submission()->get($submissionId);
+        }, $validSubmissionIds);
     }
 
     /**
@@ -863,54 +815,6 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         }
 
         return $chapters;
-    }
-
-    /**
-     * Get publication formats from publication format IDs.
-     *
-     * @param array $publicationFormatIds
-     * @param Context $context
-     *
-     * @return array
-     */
-    public function getPublishedPublicationFormats(array $publicationFormatIds, Context $context): array
-    {
-        $publicationFormats = [];
-        /** @var PublicationFormatDAO $publicationFormatDao */
-        $publicationFormatDao = DAORegistry::getDAO('PublicationFormatDAO');
-        foreach ($publicationFormatIds as $publicationFormatId) {
-            $publicationFormat = $publicationFormatDao->getById($publicationFormatId);
-            $publication = Repo::publication()->get($publicationFormat->getData('publicationId'));
-            if ($publication->getData('status') === PKPSubmission::STATUS_PUBLISHED) {
-                $publicationFormats[$publicationFormatId] = $publicationFormat;
-            }
-        }
-
-        return $publicationFormats;
-    }
-
-
-    /**
-     * Get submission files from submission file IDs.
-     *
-     * @param array $submissionFileIds
-     * @param Context $context
-     *
-     * @return array
-     */
-    public function getPublishedSubmissionFiles(array $submissionFileIds, Context $context): array
-    {
-        $submissionFiles = [];
-        foreach ($submissionFileIds as $submissionFileId) {
-            $submissionFile = Repo::submissionFile()->get($submissionFileId);
-            $submission = Repo::submission()->get($submissionFile->getData('submissionId'));
-            $publication = $submission->getCurrentPublication();
-            if ($publication->getData('status') === PKPSubmission::STATUS_PUBLISHED) {
-                $submissionFiles[$submissionFileId] = $submissionFile;
-            }
-        }
-
-        return $submissionFiles;
     }
 
     /**
@@ -967,10 +871,9 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
     protected function _getDAOs(): array
     {
         return [
+            Repo::submission()->dao,
             Repo::publication()->dao,
-            Application::getRepresentationDAO(),
             DAORegistry::getDAO('ChapterDAO'),
-            Repo::submissionFile()->dao,
         ];
     }
 

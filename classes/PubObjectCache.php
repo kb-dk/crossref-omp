@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/crossref/classes/PubObjectCache.php
  *
- * Copyright (c) 2014-2023 Simon Fraser University
- * Copyright (c) 2003-2023 John Willinsky
+ * Copyright (c) 2014-2025 Simon Fraser University
+ * Copyright (c) 2003-2025 John Willinsky
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
  * @class PubObjectCache
@@ -18,9 +18,9 @@ namespace APP\plugins\generic\crossref\classes;
 
 use APP\monograph\Chapter;
 use APP\publication\Publication;
-use APP\publicationFormat\PublicationFormat;
+use APP\submission\Submission;
 use DataObject;
-use PKP\submissionFile\SubmissionFile;
+
 
 class PubObjectCache
 {
@@ -34,12 +34,12 @@ class PubObjectCache
      * Add a publishing object to the cache.
      *
      * @param DataObject $object
-     * @param Publication|null $parent Only required when adding a publication format or chapter.
+     * @param Publication|null
      */
     public function add(DataObject $object, ?Publication $parent = null): void
     {
-        if ($object instanceof Publication) {
-            $this->_insertInternally($object, 'publication', $object->getId());
+        if ($object instanceof Submission) {
+            $this->_insertInternally($object, 'submission', $object->getId());
         }
         if ($object instanceof Chapter) {
             assert($parent instanceof Publication);
@@ -49,21 +49,8 @@ class PubObjectCache
             }
 
         }
-        if ($object instanceof PublicationFormat) {
-            assert($parent instanceof Publication);
-            $this->_insertInternally($object, 'publicationFormats', $object->getId());
-            if ($parent) {
-                $this->_insertInternally($object, 'publicationFormatsByPublication', $parent->getId(), $object->getId());
-            }
-        }
-        if ($object instanceof SubmissionFile) {
-            assert($parent instanceof Publication);
-            $this->_insertInternally($object, 'submissionFiles', $object->getId());
-            if ($parent) {
-                $this->_insertInternally($object, 'submissionFilesByPublication', $parent->getId(), $object->getId());
-            }
-        }
     }
+    
 
     /**
      * Marks the given cache id "complete", i.e. it
@@ -73,7 +60,7 @@ class PubObjectCache
      * @param string $cacheId
      * @param string $objectId
      */
-    public function markComplete(string $cacheId, string $objectId): void
+    public function markComplete($cacheId, $objectId)
     {
         assert(is_array($this->_objectCache[$cacheId][$objectId]));
         $this->_objectCache[$cacheId][$objectId]['complete'] = true;
@@ -89,12 +76,11 @@ class PubObjectCache
      * before you try to retrieve it with this method.
      *
      * @param string $cacheId
-     * @param int    $id1
-     * @param ?int   $id2
+     * @param int $id1
+     * @param int $id2
      *
-     * @return mixed|void
      */
-    public function get(string $cacheId, int $id1, ?int $id2 = null)
+    public function get($cacheId, $id1, $id2 = null)
     {
         assert($this->isCached($cacheId, $id1, $id2));
         if (is_null($id2)) {
@@ -113,16 +99,17 @@ class PubObjectCache
      *
      * @param string $cacheId
      * @param int $id1
-     * @param ?int $id2
+     * @param int $id2
      *
      * @return bool
      */
-    public function isCached(string $cacheId, int $id1, ?int $id2 = null): bool
+    public function isCached($cacheId, $id1, $id2 = null)
     {
         if (!isset($this->_objectCache[$cacheId])) {
             return false;
         }
 
+        $id1 = (int)$id1;
         if (is_null($id2)) {
             if (!isset($this->_objectCache[$cacheId][$id1])) {
                 return false;
@@ -133,6 +120,7 @@ class PubObjectCache
                 return true;
             }
         } else {
+            $id2 = (int)$id2;
             return isset($this->_objectCache[$cacheId][$id1][$id2]);
         }
     }
@@ -147,9 +135,9 @@ class PubObjectCache
      * @param object $object
      * @param string $cacheId
      * @param int $id1
-     * @param ?int $id2
+     * @param int $id2
      */
-    public function _insertInternally(object $object, string $cacheId, int $id1, ?int $id2 = null): void
+    public function _insertInternally($object, $cacheId, $id1, $id2 = null)
     {
         if ($this->isCached($cacheId, $id1, $id2)) {
             return;
@@ -159,9 +147,11 @@ class PubObjectCache
             $this->_objectCache[$cacheId] = [];
         }
 
+        $id1 = (int)$id1;
         if (is_null($id2)) {
             $this->_objectCache[$cacheId][$id1] = $object;
         } else {
+            $id2 = (int)$id2;
             if (!isset($this->_objectCache[$cacheId][$id1])) {
                 $this->_objectCache[$cacheId][$id1] = [];
             }
