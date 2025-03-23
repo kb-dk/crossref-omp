@@ -14,7 +14,6 @@ use PKP\context\Context;
 use PKP\plugins\importexport\PKPImportExportDeployment;
 use PKP\plugins\Plugin;
 
-
 class CrossrefExportDeployment extends PKPImportExportDeployment
 {
     // XML attributes
@@ -26,6 +25,9 @@ class CrossrefExportDeployment extends PKPImportExportDeployment
     public const CROSSREF_XMLNS_AI = 'http://www.crossref.org/AccessIndicators.xsd';
     public const CROSSREF_XMLNS_REL = 'http://www.crossref.org/relations.xsd';
     public const CROSSREF_XMLNS_XML = 'http://www.w3.org/XML/1998/namespace';
+
+    /** @var Context The current import/export context */
+    public $_context;
 
     /** @var CrossrefExportPlugin $_plugin The current import/export plugin */
     public CrossrefExportPlugin $_plugin;
@@ -150,6 +152,26 @@ class CrossrefExportDeployment extends PKPImportExportDeployment
     //
     // Getter/setters
     //
+    /**
+     * Set the import/export context.
+     *
+     * @param \PKP\context\Context $context
+     */
+    public function setContext($context)
+    {
+        $this->_context = $context;
+    }
+
+    /**
+     * Get the import/export context.
+     *
+     * @return \PKP\context\Context
+     */
+    public function getContext(): Context
+    {
+        return $this->_context;
+    }
+
     /**
      * Set the import/export plugin.
      *

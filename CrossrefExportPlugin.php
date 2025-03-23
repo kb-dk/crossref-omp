@@ -14,23 +14,20 @@
 namespace APP\plugins\generic\crossref;
 
 use APP\core\Application;
-use APP\core\Request;
-use APP\facades\Repo;
-use APP\monograph\Chapter;
-use APP\plugins\generic\crossref\classes\CrossrefSettings;
-use APP\plugins\generic\crossref\classes\DOIPubIdExportPlugin;
-use APP\publication\Publication;
-use APP\publicationFormat\PublicationFormat;
-use Exception;
 use PKP\config\Config;
+use APP\facades\Repo;
+use APP\plugins\generic\crossref\classes\DOIPubIdExportPlugin;
+use APP\submission\Submission;
+use Exception;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use PKP\context\Context;
 use PKP\core\DataObject;
-use PKP\core\PKPApplication;
-use PKP\core\PKPString;
 use PKP\doi\Doi;
 use PKP\file\FileManager;
 use PKP\file\TemporaryFileManager;
-use PKP\submissionFile\SubmissionFile;
+use PKP\plugins\Hook;
+use PKP\plugins\Plugin;
 
 class CrossrefExportPlugin extends DOIPubIdExportPlugin {
 
@@ -62,16 +59,38 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
         $this->agencyPlugin = $agencyPlugin;
     }
 
+    public function register($category, $path, $mainContextId = null): bool
+    {
+        $success = parent::register($category, $path, $mainContextId);
+        if ($success) {
+            // register hooks. This will prevent DB access attempts before the
+            // schema is installed.
+            if (Application::isUnderMaintenance()) {
+                return true;
+            }
+        }
+        return $success;
+    }
+
+    /**
+     * @copydoc Plugin::getName()
+     */
     public function getName(): string
     {
         return 'CrossrefExportPlugin';
     }
 
+    /**
+     * @copydoc Plugin::getDisplayName()
+     */
     public function getDisplayName(): string
     {
         return __('plugins.importexport.crossref.displayName');
     }
 
+    /**
+     * @copydoc Plugin::getDescription()
+     */
     public function getDescription(): string
     {
         return __('plugins.importexport.crossref.description');
@@ -83,27 +102,6 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
     public function getSubmissionFilter()
     {
         return 'book=>crossref-xml';
-    }
-
-    public function getPluginSettingsPrefix(): string
-    {
-        return 'crossrefplugin';
-    }
-
-    /**
-     * @copydoc DOIPubIdExportPlugin::getSettingsFormClassName()
-     */
-    public function getSettingsFormClassName(): string
-    {
-        throw new Exception('DOI settings no longer managed via plugin settings form.');
-    }
-
-    /**
-     * @copydoc PubObjectsExportPlugin::getExportDeploymentClassName()
-     */
-    public function getExportDeploymentClassName(): string
-    {
-        return (string) \APP\plugins\generic\crossref\CrossrefExportDeployment::class;
     }
 
     /** Proxy to main plugin class's `getSetting` method */
@@ -171,6 +169,30 @@ class CrossrefExportPlugin extends DOIPubIdExportPlugin {
             $this->getFailedMsgSettingName(),
             $this->getSuccessMsgSettingName(),
         ]);
+    }
+
+    /**
+     * @copydoc ImportExportPlugin::getPluginSettingsPrefix()
+     */
+    public function getPluginSettingsPrefix()
+    {
+        return 'crossrefplugin';
+    }
+
+    /**
+     * @copydoc DOIPubIdExportPlugin::getSettingsFormClassName()
+     */
+    public function getSettingsFormClassName(): string
+    {
+        throw new Exception('DOI settings no longer managed via plugin settings form.');
+    }
+
+    /**
+     * @copydoc PubObjectsExportPlugin::getExportDeploymentClassName()
+     */
+    public function getExportDeploymentClassName(): string
+    {
+        return (string) \APP\plugins\generic\crossref\CrossrefExportDeployment::class;
     }
 
     public function exportAndDeposit($context, $objects, $filter, string &$responseMessage, $noValidation = null): bool
