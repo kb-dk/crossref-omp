@@ -7,7 +7,7 @@
  * Copyright (c) 2003-2025 John Willinsky
  * Distributed under The MIT License. For full terms see the file LICENSE.
  *
- * @class Crossref
+ * @class CrossrefPlugin
  *
  * @brief Plugin to let managers deposit DOIs and metadata to Crossref
  *
@@ -22,8 +22,7 @@ use APP\monograph\Chapter;
 use APP\monograph\ChapterDAO;
 use APP\plugins\generic\crossref\classes\CrossrefSettings;
 use APP\plugins\IDoiRegistrationAgency;
-use APP\publicationFormat\PublicationFormat;
-use APP\publicationFormat\PublicationFormatDAO;
+use APP\services\ContextService;
 use APP\submission\Submission;
 use Illuminate\Support\Collection;
 use PKP\context\Context;
@@ -94,35 +93,51 @@ class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
     }
 
     /**
-     * @param Submission[] $submissions
-     *
+     * Helper to register hooks that are used in normal plugin setup and in CLI tool usage.
      */
-    public function exportSubmissions(array $submissions, Context $context): array
+    private function _pluginInitialization()
     {
-        $exportPlugin = $this->_getExportPlugin();
-        $filterName = $exportPlugin->getSubmissionFilter();
-        $xmlErrors = [];
+        PluginRegistry::register('importexport', new CrossrefExportPlugin($this), $this->getPluginPath());
 
-        $temporaryFileId = $exportPlugin->exportAsDownload($context, $submissions, $filterName, 'books', null, $xmlErrors);
-        return ['temporaryFileId' => $temporaryFileId, 'xmlErrors' => $xmlErrors];
-    }
+        Hook::add('DoiSettingsForm::setEnabledRegistrationAgencies', [$this, 'addAsRegistrationAgencyOption']);
+        Hook::add('DoiSetupSettingsForm::getObjectTypes', [$this, 'addAllowedObjectTypes']);
+        Hook::add('Context::validate', [$this, 'validateAllowedPubObjectTypes']);
+        Hook::add('Schema::get::doi', [$this, 'addToSchema']);
+
+        Hook::add('Doi::markRegistered', [$this, 'editMarkRegisteredParams']);
+        Hook::add('DoiListPanel::setConfig', [$this, 'addRegistrationAgencyName']);
+    }    
 
     /**
-     * @param Submission[] $submissions
+     * Add properties for Crossref to the DOI entity for storage in the database.
+     *
+     * @param string $hookName `Schema::get::doi`
+     * @param array $args [
+     *
+     *      @option stdClass $schema
+     * ]
+     *
      */
-    public function depositSubmissions(array $submissions, Context $context): array
+    public function addToSchema(string $hookName, array $args): bool
     {
-        $exportPlugin = $this->_getExportPlugin();
-        $filterName = $exportPlugin->getSubmissionFilter();
-        $responseMessage = '';
-        $status = $exportPlugin->exportAndDeposit($context, $submissions, $filterName, $responseMessage);
+        $schema = &$args[0];
 
-        return [
-            'hasErrors' => !$status,
-            'responseMessage' => $responseMessage
+        $settings = [
+            $this->_getDepositBatchIdSettingName(),
+            $this->_getFailedMsgSettingName(),
+            $this->_getSuccessMsgSettingName(),
         ];
-    }
 
+        foreach ($settings as $settingName) {
+            $schema->properties->{$settingName} = (object) [
+                'type' => 'string',
+                'apiSummary' => true,
+                'validation' => ['nullable'],
+            ];
+        }
+
+        return false;
+    }
 
     /**
      * Includes plugin in list of configurable registration agencies for DOI depositing functionality
@@ -137,6 +152,84 @@ class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
         /** @var Collection<int,IDoiRegistrationAgency> $enabledRegistrationAgencies */
         $enabledRegistrationAgencies = &$args[0];
         $enabledRegistrationAgencies->add($this);
+    }
+
+    /**
+     * Includes human-readable name of registration agency for display in conjunction with how/with whom the
+     * DOI was registered.
+     *
+     * @param string $hookName DoiListPanel::setConfig
+     * @param array $args [
+     *
+     *      @option $config array
+     * ]
+     */
+    public function addRegistrationAgencyName(string $hookName, array $args): bool
+    {
+        $config = &$args[0];
+        $config['registrationAgencyNames'][$this->_getExportPlugin()->getName()] = $this->getRegistrationAgencyName();
+
+        return HOOK::CONTINUE;
+    }
+
+    /**
+     * Adds self to "allowed" list of pub object types that can be assigned DOIs for this registration agency.
+     *
+     * @param string $hookName DoiSetupSettingsForm::getObjectTypes
+     * @param array $args [
+     *
+     *      @option array &$objectTypeOptions
+     * ]
+     */
+    public function addAllowedObjectTypes(string $hookName, array $args): bool
+    {
+        $objectTypeOptions = &$args[0];
+        $allowedTypes = $this->getAllowedDoiTypes();
+
+        $objectTypeOptions = array_map(function ($option) use ($allowedTypes) {
+            if (in_array($option['value'], $allowedTypes)) {
+                $option['allowedBy'][] = $this->getName();
+            }
+            return $option;
+        }, $objectTypeOptions);
+
+        return Hook::CONTINUE;
+    }
+
+    /**
+     * Add validation rule to Context for restriction of allowed pubObject types for DOI registration.
+     *
+     * @throws \Exception
+     */
+    public function validateAllowedPubObjectTypes(string $hookName, array $args): bool
+    {
+        $errors = &$args[0];
+        $props = $args[2];
+
+        if (!isset($props['enabledDoiTypes'])) {
+            return Hook::CONTINUE;
+        }
+
+        $contextId = $props['id'];
+        if (empty($contextId)) {
+            throw new \Exception('A context ID must be present to edit context settings');
+        }
+
+        /** @var ContextService $contextService */
+        $contextService = Services::get('context');
+        $context = $contextService->get($contextId);
+        $enabledRegistrationAgency = $context->getConfiguredDoiAgency();
+        if (!$enabledRegistrationAgency instanceof $this) {
+            return Hook::CONTINUE;
+        }
+
+        $allowedTypes = $enabledRegistrationAgency->getAllowedDoiTypes();
+
+        if (!empty(array_diff($props['enabledDoiTypes'], $allowedTypes))) {
+            $errors['enabledDoiTypes'] = [__('doi.manager.settings.enabledDoiTypes.error')];
+        }
+
+        return Hook::CONTINUE;
     }
 
     /**
@@ -180,21 +273,48 @@ class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
     }
 
     /**
-     * Get key for retrieving error message if one exists on DOI object
+     * @param Submission[] $submissions
      *
      */
-    public function getErrorMessageKey(): ?string
+    public function exportSubmissions(array $submissions, Context $context): array
     {
-        return $this->_getFailedMsgSettingName();
+        $exportPlugin = $this->_getExportPlugin();
+        $filterName = $exportPlugin->getSubmissionFilter();
+        $xmlErrors = [];
+
+        $temporaryFileId = $exportPlugin->exportAsDownload($context, $submissions, $filterName, 'books', null, $xmlErrors);
+        return ['temporaryFileId' => $temporaryFileId, 'xmlErrors' => $xmlErrors];
     }
 
     /**
-     * Get key for retrieving registered message if one exists on DOI object
+     * @param Submission[] $submissions
+     */
+    public function depositSubmissions(array $submissions, Context $context): array
+    {
+        $exportPlugin = $this->_getExportPlugin();
+        $filterName = $exportPlugin->getSubmissionFilter();
+        $responseMessage = '';
+        $status = $exportPlugin->exportAndDeposit($context, $submissions, $filterName, $responseMessage);
+
+        return [
+            'hasErrors' => !$status,
+            'responseMessage' => $responseMessage
+        ];
+    }    
+
+    /**
+     * Adds Crossref specific info to Repo::doi()->markRegistered()
+     *
+     * @param string $hookName Doi::markRegistered
      *
      */
-    public function getRegisteredMessageKey(): ?string
+    public function editMarkRegisteredParams(string $hookName, array $args): bool
     {
-        return $this->_getSuccessMsgSettingName();
+        $editParams = &$args[0];
+        $editParams[$this->_getFailedMsgSettingName()] = null;
+        $editParams[$this->_getSuccessMsgSettingName()] = null;
+
+        return false;
     }
 
     /**
@@ -207,7 +327,7 @@ class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
         return $this->getName() . '_failedMsg';
     }
 
-    /**
+   /**
      * Get deposit batch ID setting name.
      * NB: Change from 3.3.x to camelCase (over crossref::batchId)
      *
@@ -241,57 +361,19 @@ class CrossrefPlugin extends GenericPlugin implements IDoiRegistrationAgency
     }
 
     /**
-     * Helper to register hooks that are used in normal plugin setup and in CLI tool usage.
+     * @inheritDoc
      */
-    private function _pluginInitialization(): void
+    public function getErrorMessageKey(): ?string
     {
-        PluginRegistry::register('importexport', new CrossrefExportPlugin($this), $this->getPluginPath());
-
-        Hook::add('DoiSettingsForm::setEnabledRegistrationAgencies', $this-> addAsRegistrationAgencyOption(...));
-        Hook::add('DoiSetupSettingsForm::getObjectTypes', $this->addAllowedObjectTypes(...));
-        Hook::add('DoiListPanel::setConfig', $this->addRegistrationAgencyName(...));
+        return $this->_getFailedMsgSettingName();
     }
 
     /**
-     * Includes human-readable name of registration agency for display in conjunction with how/with whom the
-     * DOI was registered.
-     *
-     * @param string $hookName DoiListPanel::setConfig
-     * @param array $args [
-     *
-     *      @option $config array
-     * ]
+     * @inheritDoc
      */
-    public function addRegistrationAgencyName(string $hookName, array $args): bool
+    public function getRegisteredMessageKey(): ?string
     {
-        $config = &$args[0];
-        $config['registrationAgencyNames'][$this->_getExportPlugin()->getName()] = $this->getRegistrationAgencyName();
-
-        return HOOK::CONTINUE;
-    }
-
-    /**
-     * Adds self to "allowed" list of pub object types that can be assigned DOIs for this registration agency.
-     *
-     * @param string $hookName DoiSetupSettingsForm::getObjectTypes
-     * @param array $args [
-     *
-     *      @option array &$objectTypeOptions
-     * ]
-     */
-    public function addAllowedObjectTypes(string $hookName, array $args): bool
-    {
-        $objectTypeOptions = &$args[0];
-        $allowedTypes = $this->getAllowedDoiTypes();
-
-        $objectTypeOptions = array_map(function ($option) use ($allowedTypes) {
-            if (in_array($option['value'], $allowedTypes)) {
-                $option['allowedBy'][] = $this->getName();
-            }
-            return $option;
-        }, $objectTypeOptions);
-
-        return Hook::CONTINUE;
+        return $this->_getSuccessMsgSettingName();
     }
 
     /**
