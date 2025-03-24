@@ -88,7 +88,7 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         }
 
         if (Application::isUnderMaintenance()) {
-            return false;
+            return true;
         }
 
         $this->addLocaleData();
@@ -96,9 +96,11 @@ abstract class PubObjectsExportPlugin extends ImportExportPlugin
         Hook::add('AcronPlugin::parseCronTab', [$this, 'callbackParseCronTab']);
         foreach ($this->_getDAOs() as $dao) {
             if ($dao instanceof SchemaDAO) {
-                Hook::add('Schema::get::' . $dao->schemaName, $this->addToSchema(...));
+                Hook::add('Schema::get::' . $dao->schemaName, [$this, 'addToSchema']);
+            } elseif ($dao instanceof EntityDAO) {
+                Hook::add('Schema::get::' . $dao->schema, [$this, 'addToSchema']);
             } else {
-                Hook::add(strtolower_codesafe(get_class($dao)) . '::getAdditionalFieldNames', $this->getAdditionalFieldNames(...));
+                Hook::add(strtolower_codesafe(get_class($dao)) . '::getAdditionalFieldNames', [&$this, 'getAdditionalFieldNames']);
             }
         }
         return true;
