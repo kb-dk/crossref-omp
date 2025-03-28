@@ -381,6 +381,28 @@ class CrossrefXmlFilter extends NativeExportFilter
 		$publicationDateNode->appendChild($node = $doc->createElementNS($deployment->getNamespace(), 'year', $this->xmlEscape( date('Y', strtotime($datePublished)) )));
 		$contentItemNode->appendChild($publicationDateNode);
 
+        // Pages
+        // Add <pages> element only if a valid page range or a single page is specified.
+        // Accepts page ranges like "10-20" with optional spaces, or a single page like "10".
+        // This avoids Crossref validation errors when ambiguous formats are provided.
+        if ($chapter->getPages()) {
+            $pagesText = trim($chapter->getPages());
+
+            // Match a page range like "10-20" or "10 – 20"
+            if (preg_match('/^(\d+)\s*[-–]\s*(\d+)$/', $pagesText, $matches)) {
+                $pagesNode = $doc->createElementNS($deployment->getNamespace(), 'pages');
+                $pagesNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'first_page', $this->xmlEscape($matches[1])));
+                $pagesNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'last_page', $this->xmlEscape($matches[2])));
+                $contentItemNode->appendChild($pagesNode);
+            }
+            // Match a single page like "10"
+            elseif (preg_match('/^\d+$/', $pagesText)) {
+                $pagesNode = $doc->createElementNS($deployment->getNamespace(), 'pages');
+                $pagesNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'first_page', $this->xmlEscape($pagesText)));
+                $contentItemNode->appendChild($pagesNode);
+            }
+        }
+
 		// DOI data
         $request = Application::get()->getRequest();
         $dispatcher = $this->_getDispatcher($request);
