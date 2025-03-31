@@ -392,7 +392,7 @@ class CrossrefXmlFilter extends NativeExportFilter
             $context->getPath(),
             'catalog',
             'book',
-            $chapter->isPageEnabled() === 1
+            $chapter->isPageEnabled() == 1
                 ? [$submission->getBestId(), 'chapter', $chapter->getId()]
                 : [$submission->getBestId()],
             null,
