@@ -144,7 +144,6 @@ class CrossrefXmlFilter extends NativeExportFilter
         $depositorNode->appendChild($node = $doc->createElementNS($deployment->getNamespace(), 'depositor_name', htmlspecialchars($depositorName, ENT_COMPAT, 'UTF-8')));
         $depositorNode->appendChild($node = $doc->createElementNS($deployment->getNamespace(), 'email_address', htmlspecialchars($depositorEmail, ENT_COMPAT, 'UTF-8')));
         $headNode->appendChild($depositorNode);
-        
         $publisherName = $context->getLocalizedData('name', $context->getPrimaryLocale());
         $headNode->appendChild($node = $doc->createElementNS($deployment->getNamespace(), 'registrant', htmlspecialchars($publisherName, ENT_COMPAT, 'UTF-8')));
         return $headNode;
@@ -270,6 +269,10 @@ class CrossrefXmlFilter extends NativeExportFilter
 		// Book publisher
 		$publisherNode = $doc->createElementNS($deployment->getNamespace(), 'publisher');
 		$publisherNode->appendChild($node = $doc->createElementNS($deployment->getNamespace(), 'publisher_name', $this->xmlEscape($context->getData('publisher'))));
+        $location = $context->getSetting('location');
+        if (!empty($location)) {
+            $publisherNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'publisher_place', $location));
+        }
 		$bookMetadataNode->appendChild($publisherNode);
 
 		// DOI data
