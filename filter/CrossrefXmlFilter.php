@@ -30,6 +30,7 @@ use PKP\core\PKPString;
 use PKP\filter\FilterGroup;
 use PKP\i18n\LocaleConversion;
 use PKP\plugins\importexport\native\filter\NativeExportFilter;
+use PKP\db\DAORegistry;
 
 class CrossrefXmlFilter extends NativeExportFilter
 {
@@ -285,6 +286,11 @@ class CrossrefXmlFilter extends NativeExportFilter
 		$doiDataNode->appendChild($node = $doc->createElementNS($deployment->getNamespace(), 'resource', $this->xmlEscape($url)));
 		$bookMetadataNode->appendChild($doiDataNode);
 
+        //Citations
+        if ($publication->getData('citationsRaw')) {
+            $bookMetadataNode->appendChild($this->createCitationsNode($doc, $publication));
+        }
+
 		return $bookMetadataNode;
 	}
 
@@ -494,6 +500,49 @@ class CrossrefXmlFilter extends NativeExportFilter
 
 		return $contributorsNode;
 	}
+
+    /**
+     * Create and return the Crossref citations node 'citation_list'.
+     * This includes all raw citations entered in the metadata of the publication.
+     * 
+     * If parsed citations are available in the database, they will be used.
+     * Otherwise, the method will fall back to using the raw citation text stored
+     * in the 'citationsRaw' field of the publication.
+     *
+     * Each citation will be added as an individual 'citation' element
+     * containing an 'unstructured_citation' node.
+     *
+     * @param \DOMDocument $doc The DOM document used to create XML nodes.
+     * @param \APP\publication\Publication $publication The publication object containing citation data.
+     *
+     * @return \DOMElement|null The 'citation_list' element to be added to the XML, or null if an error occurs.
+     */
+    function createCitationsNode($doc, $publication)
+    {
+        $deployment = $this->getDeployment();
+        $citationsNode = $doc->createElementNS($deployment->getNamespace(), 'citation_list');
+        $citationDao = DAORegistry::getDAO('CitationDAO'); /* @var $citationDao CitationDAO */
+        $parsedCitations = $citationDao->getByPublicationId($publication->getId())->toArray();
+
+        $citationList = [];
+        if ($parsedCitations) {
+            foreach ($parsedCitations as $citation) {
+                $citationList[] = $citation->getData('rawCitation');
+            }
+        } else {
+            $citationList = explode("\n", $publication->getData('citationsRaw'));
+        }
+
+        foreach ($citationList as $key => $citation) {
+            $citationNode = $doc->createElementNS($deployment->getNamespace(), 'citation');
+            $citationNode->setAttribute('key', 'ref' . ($key + 1));
+            $unstructuredcitationNode = $doc->createElementNS($deployment->getNamespace(), 'unstructured_citation', $citation);
+            $citationNode->appendChild($unstructuredcitationNode);
+            $citationsNode->appendChild($citationNode);
+        }
+
+        return $citationsNode;
+    }
 
     //
     // Helper functions
